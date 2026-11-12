@@ -51,6 +51,8 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,wasm,woff,woff2}'],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         navigateFallback: 'index.html',
+        // La presentación es otra página: nunca se responde con la app en su lugar.
+        navigateFallbackDenylist: [/^\/presentacion/],
       },
     }),
     subpageManifestLink(),
