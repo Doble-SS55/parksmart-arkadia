@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "parksmart-arkadia"
+  },
+  "targets": {
+    "parksmart-arkadia": {
+      "hosting": {
+        "produccion": ["parksmart-arkadia"],
+        "pruebas": ["parksmart-arkadia-pruebas"]
+      }
+    }
+  },
+  "etags": {}
+}

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="Teoría de colas, Montecarlo y simulación de eventos discretos para los accesos vehiculares del Centro Comercial Arkadia, Medellín." />
+    <meta name="theme-color" content="#10284A" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <title>ParkSmart Arkadia</title>
+    <script>
+      // Aplica el tema guardado antes de pintar para evitar un destello claro.
+      (function () {
+        try {
+          var p = localStorage.getItem('psa.theme');
+          var dark = p === 'oscuro' || (p !== 'claro' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+          if (dark) document.querySelector('meta[name="theme-color"]').setAttribute('content', '#08111D');
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <noscript>ParkSmart Arkadia necesita JavaScript para funcionar.</noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

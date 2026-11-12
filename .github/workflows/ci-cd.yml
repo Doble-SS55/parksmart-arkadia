@@ -1,0 +1,149 @@
+# ParkSmart Arkadia: pruebas, web, APK Android y publicación en Firebase Hosting (Google Cloud).
+#
+#   push a main      → pruebas + APK + publica en el sitio de producción
+#   push a pruebas   → pruebas + APK + publica en el sitio de pruebas
+#   pull request     → pruebas + APK + vista previa temporal en Firebase
+#   etiqueta v*      → además crea un "Release" de GitHub con la APK adjunta
+#
+# Secretos (Settings → Secrets and variables → Actions):
+#   FIREBASE_SERVICE_ACCOUNT_PARKSMART_ARKADIA  lo crea `firebase init hosting:github` (ver docs/DESPLIEGUE.md)
+#   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
+#       opcionales: firma de producción (necesaria para Google Play). Sin ellos se genera una APK de depuración instalable.
+name: ParkSmart CI/CD
+
+on:
+  push:
+    branches: [main, pruebas]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: Pruebas y compilación web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - name: Dependencias
+        run: npm ci
+      - name: Pruebas unitarias e integración
+        run: npm test
+      - name: Compilación (incluye revisión de tipos)
+        run: npm run build
+      - name: Pruebas de extremo a extremo en Chrome
+        run: npm run e2e
+        env: { CHROME_PATH: /usr/bin/google-chrome }
+      - uses: actions/upload-artifact@v4
+        with: { name: web, path: dist, retention-days: 14 }
+
+  android:
+    name: APK Android
+    needs: web
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    env:
+      ANDROID_VERSION_CODE: ${{ github.run_number }}
+      ANDROID_VERSION_NAME: 1.0.${{ github.run_number }}
+      HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with: { name: web, path: dist }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21, cache: gradle }
+      - uses: android-actions/setup-android@v3
+      - name: Copiar la web al proyecto Android
+        run: npx cap sync android
+      - name: Preparar la firma de producción
+        if: env.HAS_KEYSTORE == 'true'
+        env: { KEYSTORE_B64: '${{ secrets.ANDROID_KEYSTORE_BASE64 }}' }
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+      - name: Compilar APK y AAB firmados
+        if: env.HAS_KEYSTORE == 'true'
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleRelease bundleRelease
+          mkdir -p ../salida
+          cp app/build/outputs/apk/release/app-release.apk ../salida/parksmart-arkadia.apk
+          cp app/build/outputs/bundle/release/app-release.aab ../salida/parksmart-arkadia.aab
+      - name: Compilar APK de depuración (instalable)
+        if: env.HAS_KEYSTORE != 'true'
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug
+          mkdir -p ../salida
+          cp app/build/outputs/apk/debug/app-debug.apk ../salida/parksmart-arkadia.apk
+      - uses: actions/upload-artifact@v4
+        with: { name: android, path: salida, retention-days: 30 }
+      - name: Publicar Release con la APK
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: salida/*
+          name: ParkSmart Arkadia ${{ github.ref_name }}
+          body: APK para Android de ParkSmart Arkadia. Descargue `parksmart-arkadia.apk` en el celular e instálela.
+
+  publicar:
+    name: Publicar en Firebase Hosting
+    needs: [web, android]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/pruebas')
+    runs-on: ubuntu-latest
+    env:
+      HAS_FIREBASE: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PARKSMART_ARKADIA != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: web, path: dist }
+      - uses: actions/download-artifact@v4
+        with: { name: android, path: apk }
+      - name: Incluir la APK en la web (/descargas)
+        run: mkdir -p dist/descargas && cp apk/parksmart-arkadia.apk dist/descargas/
+      - name: Falta configurar Firebase
+        if: env.HAS_FIREBASE != 'true'
+        run: echo "::warning::No existe el secreto FIREBASE_SERVICE_ACCOUNT_PARKSMART_ARKADIA. Siga docs/DESPLIEGUE.md para publicar la web."
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        if: env.HAS_FIREBASE == 'true'
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PARKSMART_ARKADIA }}
+          projectId: parksmart-arkadia
+          target: ${{ github.ref == 'refs/heads/main' && 'produccion' || 'pruebas' }}
+          channelId: live
+
+  vista-previa:
+    name: Vista previa del pull request
+    needs: [web, android]
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions: { contents: read, checks: write, pull-requests: write }
+    env:
+      HAS_FIREBASE: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PARKSMART_ARKADIA != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: web, path: dist }
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        if: env.HAS_FIREBASE == 'true'
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PARKSMART_ARKADIA }}
+          projectId: parksmart-arkadia
+          target: pruebas
+          expires: 7d
