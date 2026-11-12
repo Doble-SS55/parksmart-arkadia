@@ -21,6 +21,15 @@ android {
     // (secretos de GitHub). Sin ellas se compila la versión de depuración, que igual se instala.
     def keystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
     signingConfigs {
+        // Clave de depuración FIJA (incluida en el repositorio, contraseña pública "android"):
+        // todas las APK de prueba quedan firmadas igual, así una versión nueva se instala encima
+        // de la anterior. No sirve para Google Play; para eso está la firma "release".
+        debug {
+            storeFile file("debug.keystore")
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            keyPassword "android"
+        }
         release {
             if (keystorePath) {
                 storeFile file(keystorePath)
@@ -31,6 +40,9 @@ android {
         }
     }
     buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
         release {
             if (keystorePath) {
                 signingConfig signingConfigs.release

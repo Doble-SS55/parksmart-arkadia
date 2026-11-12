@@ -29,4 +29,5 @@ firebase-debug.log
 salida/
 *.jks
 *.keystore
+!android/app/debug.keystore
 keystore.properties
