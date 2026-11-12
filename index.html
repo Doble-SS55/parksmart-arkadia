@@ -9,6 +9,10 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>ParkSmart Arkadia</title>
     <script>
+      // Si esta página llega a responder en la dirección de la presentación, la abre.
+      if (location.pathname.indexOf('/presentacion') === 0) location.replace('/presentacion/index.html');
+    </script>
+    <script>
       // Aplica el tema guardado antes de pintar para evitar un destello claro.
       (function () {
         try {
