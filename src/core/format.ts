@@ -17,7 +17,7 @@ export function fmtInt(value: number | null | undefined): string {
 
 export function fmtPct(value: number | null | undefined, digits = 1): string {
   if (value === null || value === undefined || !Number.isFinite(value)) return '—';
-  return `${fmt(value * 100, digits)} %`;
+  return `${fmt(value * 100, digits)}\u00a0%`;
 }
 
 export function fmtSigned(value: number | null | undefined, digits = 2, suffix = ''): string {

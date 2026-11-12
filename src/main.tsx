@@ -14,7 +14,7 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 );
 
-if (!isNativeApp() && 'serviceWorker' in navigator) {
+if (import.meta.env.PROD && !isNativeApp() && 'serviceWorker' in navigator) {
   // Modo sin conexión e instalación como app en la versión web.
-  import('virtual:pwa-register').then(({ registerSW }) => registerSW({ immediate: true })).catch(() => {});
+  navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
 }

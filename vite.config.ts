@@ -1,7 +1,22 @@
 /// <reference types="vitest/config" />
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { resolve } from 'node:path'
+import { defineConfig, type Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
+
+/**
+ * La presentación vive en /presentacion/ y el plugin PWA enlaza el manifiesto relativo
+ * a cada página: desde ahí hay que subir un nivel para llegar a /manifest.webmanifest.
+ */
+const subpageManifestLink = (): Plugin => ({
+  name: 'parksmart-subpage-manifest-link',
+  enforce: 'post',
+  transformIndexHtml: {
+    order: 'post',
+    handler: (html, ctx) =>
+      /[\\/]presentacion[\\/]index\.html$/.test(ctx.filename) ? html.replace(/href="\.\/manifest\.webmanifest"/, 'href="../manifest.webmanifest"') : html,
+  },
+})
 
 export default defineConfig({
   // Rutas relativas: el sitio funciona en la raíz de un dominio o en una subcarpeta
@@ -38,9 +53,17 @@ export default defineConfig({
         navigateFallback: 'index.html',
       },
     }),
+    subpageManifestLink(),
   ],
   build: {
     chunkSizeWarningLimit: 1600,
+    // Dos páginas: la aplicación en la raíz y la presentación del proyecto en /presentacion/.
+    rollupOptions: {
+      input: {
+        app: resolve(import.meta.dirname, 'index.html'),
+        presentacion: resolve(import.meta.dirname, 'presentacion/index.html'),
+      },
+    },
   },
   test: {
     environment: 'node',

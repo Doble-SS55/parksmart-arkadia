@@ -37,14 +37,14 @@ const browser = await puppeteer.launch({
   executablePath: chrome, headless: true, args: ['--no-sandbox'], userDataDir: mkdtempSync(join(tmpdir(), 'psa-profile-')),
 });
 const errors = [];
-async function open(path) {
+async function open(path, { landing = false } = {}) {
   const page = await browser.newPage();
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => m.type() === 'error' && !/Failed to load resource|ERR_INTERNET_DISCONNECTED/.test(m.text()) && errors.push(m.text()));
   await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
   const cdp = await page.createCDPSession();
   await cdp.send('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath: downloads });
-  await page.goto(BASE + path, { waitUntil: 'networkidle0' });
+  await page.goto(BASE + (landing ? 'presentacion/' : '') + path, { waitUntil: 'networkidle0' });
   await sleep(900);
   return page;
 }
@@ -65,6 +65,17 @@ const setValue = (page, selector, value) =>
   }, selector, value);
 
 try {
+  // 0. Página de presentación en /presentacion/
+  let landing = await open('', { landing: true });
+  const lt = await text(landing);
+  check('Landing: secciones del proyecto', ['Cómo lo trabajamos', 'Evidencias de la toma de datos', 'Lo que encontramos', 'Plan de mejoramiento', 'La aplicación'].every((s) => lt.includes(s)));
+  await landing.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await landing.evaluate(() => Promise.all([...document.images].map((i) => (i.loading = 'eager', i.complete ? null : new Promise((r) => { i.onload = i.onerror = r; })))));
+  check('Landing: fotos de evidencia cargadas', await landing.evaluate(() => [...document.querySelectorAll('.l-photo img')].filter((i) => i.naturalWidth > 0).length === 3));
+  check('Landing: sin desborde horizontal en el celular', await landing.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+  check('Landing: enlace a la app', await landing.evaluate(() => [...document.querySelectorAll('a')].some((a) => a.href === location.origin + '/')));
+  await landing.close();
+
   // 1. Dashboard con datos del viernes y del sábado
   let page = await open('');
   let t = await text(page);

@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom';
 import { ChartFrame, useChartColors, BarChart, Legend, LineChart } from '../components/charts/charts';
 import { AndroidDownload, AppInstallBanner } from '../components/AndroidDownload';
 import { DatasetPicker } from '../components/DatasetPicker';
-import { IconCar, IconCompare, IconDice, IconQueue, IconReport, IconTable } from '../components/Icons';
+import { IconCar, IconCompare, IconDice, IconInfo, IconQueue, IconReport, IconTable } from '../components/Icons';
+import { isNativeApp } from '../platform/native';
 import { Callout, EmptyState, OriginBadge, RiskTag, SourceBadge } from '../components/ui';
 import { estimateArrivalRate } from '../core/data/aggregate';
 import { fmt, fmtDuration, fmtInt, fmtPct } from '../core/format';
@@ -223,6 +224,7 @@ export default function Dashboard() {
           <Link to="/colas/escenarios"><b><IconCompare />Comparar escenarios</b><span>Barreras, demanda y atención</span></Link>
           <Link to="/informe"><b><IconReport />Informe PDF</b><span>Documento para entregar</span></Link>
           <AndroidDownload />
+          {!isNativeApp() && <a href="./presentacion/"><b><IconInfo />El proyecto</b><span>Cómo lo trabajamos y plan de mejoramiento</span></a>}
         </div>
       </section>
     </div>

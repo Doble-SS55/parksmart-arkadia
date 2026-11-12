@@ -4,7 +4,7 @@ Un solo código, dos salidas:
 
 | Salida | Cómo se genera | Dónde queda |
 |---|---|---|
-| **Web** (producción) | GitHub Actions al hacer `push` a `main` | `https://parksmart-arkadia.web.app` |
+| **Web** (producción) | GitHub Actions al hacer `push` a `main` | `https://parksmart-arkadia.web.app` (aplicación) y `https://parksmart-arkadia.web.app/presentacion/` (presentación del proyecto) |
 | **Web** (pruebas) | `push` a la rama `pruebas` | `https://parksmart-arkadia-pruebas.web.app` (sin indexar en buscadores) |
 | **APK Android** | GitHub Actions en cada `push` | *Releases* del repositorio (una versión nueva por cada `push` a `main`); la web la enlaza con el botón y el QR. También queda como artefacto `android` en *Actions* |
 
@@ -69,7 +69,7 @@ firebase deploy --only hosting:produccion
 
 No hay que repartir la APK por separado: la web la ofrece.
 
-1. Abrir `https://parksmart-arkadia.web.app` en el celular Android. Arriba del inicio aparece **Instale ParkSmart en este celular → Descargar app**.
+1. Abrir `https://parksmart-arkadia.web.app` en el celular Android. Arriba del inicio aparece **Instale ParkSmart en este celular → Descargar app**. La presentación (`https://parksmart-arkadia.web.app/presentacion/`) también tiene el botón **Descargar para Android**.
    Desde un computador, el inicio muestra un **código QR**: se escanea con la cámara del celular y descarga la APK (útil para la sustentación).
    Enlace directo para compartir: `https://github.com/Doble-SS55/parksmart-arkadia/releases/latest/download/parksmart-arkadia.apk`.
 2. Android pedirá permitir la instalación desde el navegador ("Instalar apps desconocidas"). Si Play Protect avisa que la app no es conocida, elegir **Instalar de todas formas**: pasa con cualquier APK que no venga de Google Play.

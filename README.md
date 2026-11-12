@@ -4,7 +4,12 @@ Aplicación web, pensada primero para celular, para el **modelamiento y la simul
 
 Reto 3 · Modelamiento y Simulación Computacional · Santiago Solís, Juan Fernando Gómez Ocampo.
 
-Incluye:
+El sitio tiene dos partes:
+
+- **`/`**: la aplicación (la misma que trae la APK).
+- **`/presentacion/`**: página de presentación del proyecto (cómo lo trabajamos, evidencias de la toma de datos, resultados y plan de mejoramiento, con cifras calculadas por el mismo motor de la app). Código en `src/landing/` y `presentacion/index.html`.
+
+La aplicación incluye:
 
 - **Datos**: importación de Excel (.xlsx) y CSV, registro manual, edición, eliminación con confirmación, filtros, validación de duplicados, huecos e intervalos incompletos, y exportación a CSV.
 - **Teoría de colas** M/M/1 y M/M/s con fórmulas, valores sustituidos, Erlang C, ley de Little, prueba del supuesto de Poisson y sensibilidad al número de barreras.
@@ -37,7 +42,7 @@ Requisitos: **Node.js 20 o superior** (incluye npm).
 
 ```bash
 npm install
-npm run dev        # abre http://localhost:5173
+npm run dev        # http://localhost:5173 (aplicación) y http://localhost:5173/presentacion/ (presentación)
 ```
 
 Para verla en el celular en la misma red Wi-Fi: `npm run dev -- --host` y abrir en el teléfono la dirección "Network" que muestra la consola.
@@ -67,7 +72,7 @@ Pasos completos (crear el repositorio, conectar Firebase, instalar la APK, firma
 ```bash
 npm test           # 76 pruebas unitarias y de integración (Vitest)
 npm run build
-npm run e2e        # 26 verificaciones de extremo a extremo en Chrome (necesita Chrome; CHROME_PATH si no lo encuentra)
+npm run e2e        # 30 verificaciones de extremo a extremo en Chrome (necesita Chrome; CHROME_PATH si no lo encuentra)
 npm run check      # tipos + pruebas + compilación
 ```
 
@@ -85,11 +90,13 @@ src/
   state/         proveedor de base de datos y selección compartida
   components/    interfaz reutilizable y gráficos SVG
   pages/         pantallas
+  landing/       página de presentación del proyecto (/presentacion/)
   styles/        sistema visual
 tests/           pruebas Vitest        tests-e2e/  prueba de extremo a extremo
 docs/            ARQUITECTURA.md, METODOLOGIA.md, DESPLIEGUE.md
 android/         proyecto Android generado por Capacitor (ícono, colores, firma)
 .github/         flujo de GitHub Actions: pruebas, APK y Firebase
+public/evidencias/  fotos de la toma de datos
 data-fuente/     archivos originales del estudio
 scripts/         build_seed.py
 ```

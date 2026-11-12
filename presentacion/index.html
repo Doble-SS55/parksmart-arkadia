@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="Cómo modelamos y simulamos el flujo de carros en los accesos al parqueadero del Centro Comercial Arkadia (Medellín): conteo en campo, teoría de colas, Montecarlo y plan de mejoramiento." />
+    <meta name="theme-color" content="#10284A" />
+    <meta property="og:title" content="ParkSmart Arkadia" />
+    <meta property="og:description" content="Teoría de colas y simulación del flujo vehicular en los accesos al parqueadero de Arkadia, Medellín." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <title>ParkSmart Arkadia: el proyecto</title>
+    <script>
+      // Dentro de la app Android se abre directamente la aplicación, no la presentación.
+      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) location.replace('../');
+      (function () {
+        try {
+          var p = localStorage.getItem('psa.theme');
+          var dark = p === 'oscuro' || (p !== 'claro' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+          if (dark) document.querySelector('meta[name="theme-color"]').setAttribute('content', '#08111D');
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <noscript>ParkSmart Arkadia necesita JavaScript para mostrar esta página.</noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/landing/main.tsx"></script>
+  </body>
+</html>
