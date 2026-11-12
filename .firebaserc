@@ -5,8 +5,12 @@
   "targets": {
     "parksmart-arkadia": {
       "hosting": {
-        "produccion": ["parksmart-arkadia"],
-        "pruebas": ["parksmart-arkadia-pruebas"]
+        "produccion": [
+          "parksmart-arkadia"
+        ],
+        "pruebas": [
+          "parksmart-arkadia-pruebas"
+        ]
       }
     }
   },
