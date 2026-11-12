@@ -65,9 +65,15 @@ firebase deploy --only hosting:produccion
 
 ## 3. Instalar la APK en un celular Android
 
-1. Abrir `https://parksmart-arkadia.web.app` en el celular y tocar **App para Android** en el inicio (o descargar `parksmart-arkadia.apk` desde *Actions* o *Releases*).
-2. Android pedirá permitir la instalación desde el navegador ("Instalar apps desconocidas"). Aceptar solo para esta instalación.
+La APK viaja con la web: no hay que repartirla por separado.
+
+1. Abrir `https://parksmart-arkadia.web.app` en el celular Android. Arriba del inicio aparece **Instale ParkSmart en este celular → Descargar app**.
+   Desde un computador, el inicio muestra un **código QR**: se escanea con la cámara del celular y descarga la APK directamente (útil para la sustentación).
+   Enlace directo para compartir: `https://parksmart-arkadia.web.app/descargas/parksmart-arkadia.apk`.
+2. Android pedirá permitir la instalación desde el navegador ("Instalar apps desconocidas"). Si Play Protect avisa que la app no es conocida, elegir **Instalar de todas formas**: pasa con cualquier APK que no venga de Google Play.
 3. Abrir **ParkSmart Arkadia**. Funciona sin internet.
+
+El aviso y el QR solo aparecen cuando la APK está publicada (es decir, después de conectar Firebase y hacer `push`).
 
 En la APK, el PDF, el CSV y el respaldo se entregan con el menú **Compartir** (guardar en Archivos o Drive, enviar por WhatsApp, etc.).
 

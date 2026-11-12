@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ChartFrame, useChartColors, BarChart, Legend, LineChart } from '../components/charts/charts';
-import { AndroidDownload } from '../components/AndroidDownload';
+import { AndroidDownload, AppInstallBanner } from '../components/AndroidDownload';
 import { DatasetPicker } from '../components/DatasetPicker';
 import { IconCar, IconCompare, IconDice, IconQueue, IconReport, IconTable } from '../components/Icons';
 import { Callout, EmptyState, OriginBadge, RiskTag, SourceBadge } from '../components/ui';
@@ -58,6 +58,8 @@ export default function Dashboard() {
           <DatasetPicker datasets={datasets} value={selected} onChange={setSelectedId} />
         </div>
       </div>
+
+      <AppInstallBanner />
 
       <section
         className="signboard"
