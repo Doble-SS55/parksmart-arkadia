@@ -1,9 +1,11 @@
 # ParkSmart Arkadia: pruebas, web, APK Android y publicación en Firebase Hosting (Google Cloud).
 #
-#   push a main      → pruebas + APK + publica en el sitio de producción
-#   push a pruebas   → pruebas + APK + publica en el sitio de pruebas
+#   push a main      → pruebas + publica la web en producción + APK publicada como "Release" (la web la enlaza)
+#   push a pruebas   → pruebas + publica la web en el sitio de pruebas + APK como artefacto
 #   pull request     → pruebas + APK + vista previa temporal en Firebase
-#   etiqueta v*      → además crea un "Release" de GitHub con la APK adjunta
+#
+# La APK NO se sube a Firebase: el plan gratuito (Spark) prohíbe archivos ejecutables.
+# Se publica en GitHub Releases y la web enlaza a /releases/latest/download/parksmart-arkadia.apk.
 #
 # Secretos (Settings → Secrets and variables → Actions):
 #   FIREBASE_SERVICE_ACCOUNT_PARKSMART_ARKADIA  lo crea `firebase init hosting:github` (ver docs/DESPLIEGUE.md)
@@ -62,6 +64,7 @@ jobs:
         with: { distribution: temurin, java-version: 21, cache: gradle }
       - uses: android-actions/setup-android@v3
         with:
+          # El paquete "tools" ya no existe en el SDK actual; Gradle descarga solo la plataforma que necesite.
           packages: platform-tools
       - name: Copiar la web al proyecto Android
         run: npx cap sync android
@@ -94,17 +97,22 @@ jobs:
           cp app/build/outputs/apk/debug/app-debug.apk ../salida/parksmart-arkadia.apk
       - uses: actions/upload-artifact@v4
         with: { name: android, path: salida, retention-days: 30 }
-      - name: Publicar Release con la APK
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Publicar la APK en GitHub Releases
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ env.ANDROID_VERSION_NAME }}
+          target_commitish: ${{ github.sha }}
+          name: ParkSmart Arkadia v${{ env.ANDROID_VERSION_NAME }}
+          make_latest: 'true'
           files: salida/*
-          name: ParkSmart Arkadia ${{ github.ref_name }}
-          body: APK para Android de ParkSmart Arkadia. Descargue `parksmart-arkadia.apk` en el celular e instálela.
+          body: |
+            APK para Android de ParkSmart Arkadia (compilación ${{ github.run_number }}, commit ${{ github.sha }}).
+            Descargue `parksmart-arkadia.apk` en el celular e instálela. También se descarga desde el inicio de la web.
 
   publicar:
     name: Publicar en Firebase Hosting
-    needs: [web, android]
+    needs: web
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/pruebas')
     runs-on: ubuntu-latest
     env:
@@ -113,10 +121,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with: { name: web, path: dist }
-      - uses: actions/download-artifact@v4
-        with: { name: android, path: apk }
-      - name: Incluir la APK en la web (/descargas)
-        run: mkdir -p dist/descargas && cp apk/parksmart-arkadia.apk dist/descargas/
       - name: Falta configurar Firebase
         if: env.HAS_FIREBASE != 'true'
         run: echo "::warning::No existe el secreto FIREBASE_SERVICE_ACCOUNT_PARKSMART_ARKADIA. Siga docs/DESPLIEGUE.md para publicar la web."
@@ -131,7 +135,7 @@ jobs:
 
   vista-previa:
     name: Vista previa del pull request
-    needs: [web, android]
+    needs: web
     if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions: { contents: read, checks: write, pull-requests: write }

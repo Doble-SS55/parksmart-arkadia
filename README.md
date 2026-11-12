@@ -58,7 +58,7 @@ Una vez publicada, en el celular se puede **instalar** desde el menú del navega
 
 ## App Android (APK) y publicación en Google Cloud
 
-El mismo código se empaqueta como APK con **Capacitor** (carpeta `android/`) y la web se publica en **Firebase Hosting**, igual que MAC-TEA-front. GitHub Actions (`.github/workflows/ci-cd.yml`) hace todo en cada `push`: pruebas, web, APK y publicación. La APK queda descargable en la misma web (`/descargas/parksmart-arkadia.apk`).
+El mismo código se empaqueta como APK con **Capacitor** (carpeta `android/`) y la web se publica en **Firebase Hosting**, igual que MAC-TEA-front. GitHub Actions (`.github/workflows/ci-cd.yml`) hace todo en cada `push`: pruebas, web, APK y publicación. La APK se publica en GitHub Releases y la web la ofrece con un botón y un código QR (el plan gratuito de Firebase no admite archivos .apk).
 
 Pasos completos (crear el repositorio, conectar Firebase, instalar la APK, firma para Google Play): **[docs/DESPLIEGUE.md](docs/DESPLIEGUE.md)**.
 

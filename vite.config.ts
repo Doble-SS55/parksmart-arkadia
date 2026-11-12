@@ -36,8 +36,6 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,wasm,woff,woff2}'],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         navigateFallback: 'index.html',
-        // La APK publicada en /descargas debe llegar del servidor, no del caché de la app.
-        navigateFallbackDenylist: [/\/descargas\//],
       },
     }),
   ],

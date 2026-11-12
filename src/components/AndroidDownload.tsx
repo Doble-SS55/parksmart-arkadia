@@ -2,25 +2,33 @@ import { useEffect, useState } from 'react';
 import { isNativeApp } from '../platform/native';
 import { IconDownload } from './Icons';
 
-/** La APK se publica junto a la web en esta ruta (lo hace GitHub Actions). */
-export const APK_PATH = './descargas/parksmart-arkadia.apk';
+/**
+ * La APK se publica en GitHub Releases (el plan gratuito de Firebase no admite
+ * archivos ejecutables). Este enlace siempre entrega la versión más reciente.
+ */
+const REPO = (import.meta.env.VITE_APK_REPO as string | undefined) ?? 'Doble-SS55/parksmart-arkadia';
+export const APK_URL = `https://github.com/${REPO}/releases/latest/download/parksmart-arkadia.apk`;
+const LATEST_API = `https://api.github.com/repos/${REPO}/releases/latest`;
 
 const isAndroid = () => typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent);
 
-/** true si la APK está publicada junto a la web y no estamos dentro de la APK. */
-function useApkAvailable(): boolean {
-  const [available, setAvailable] = useState(false);
+/** Versión publicada de la APK (p. ej. "v1.0.7"), o null si no hay una disponible. */
+function useApkRelease(): string | null {
+  const [tag, setTag] = useState<string | null>(null);
   useEffect(() => {
     if (isNativeApp() || !import.meta.env.PROD) return;
     let alive = true;
-    fetch(APK_PATH, { method: 'HEAD', cache: 'no-store' })
-      .then((r) => alive && setAvailable(r.ok && !(r.headers.get('content-type') ?? '').includes('text/html')))
+    fetch(LATEST_API, { headers: { Accept: 'application/vnd.github+json' } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((rel: { tag_name?: string; assets?: { name: string }[] } | null) => {
+        if (alive && rel?.assets?.some((a) => a.name === 'parksmart-arkadia.apk')) setTag(rel.tag_name ?? 'última');
+      })
       .catch(() => {});
     return () => {
       alive = false;
     };
   }, []);
-  return available;
+  return tag;
 }
 
 /**
@@ -29,24 +37,23 @@ function useApkAvailable(): boolean {
  * - En un computador: código QR para escanear con el celular y descargarla.
  */
 export function AppInstallBanner() {
-  const available = useApkAvailable();
+  const version = useApkRelease();
   const [qr, setQr] = useState<string | null>(null);
   const android = isAndroid();
-  const url = typeof window !== 'undefined' ? new URL(APK_PATH, window.location.href).href : APK_PATH;
 
   useEffect(() => {
-    if (!available || android) return;
+    if (!version || android) return;
     let alive = true;
     import('qrcode')
-      .then((QR) => QR.toString(url, { type: 'svg', margin: 1, color: { dark: '#10284A', light: '#FFFFFF' } }))
+      .then((QR) => QR.toString(APK_URL, { type: 'svg', margin: 1, color: { dark: '#10284A', light: '#FFFFFF' } }))
       .then((svg) => alive && setQr(svg))
       .catch(() => {});
     return () => {
       alive = false;
     };
-  }, [available, android, url]);
+  }, [version, android]);
 
-  if (!available) return null;
+  if (!version) return null;
 
   if (android) {
     return (
@@ -54,8 +61,9 @@ export function AppInstallBanner() {
         <div>
           <h2>Instale ParkSmart en este celular</h2>
           <p>Funciona sin internet. Al abrir el archivo, Android le pedirá permitir la instalación desde el navegador.</p>
+          <p className="small muted">Versión {version}</p>
         </div>
-        <a className="btn btn-primary" href={APK_PATH} download="parksmart-arkadia.apk">
+        <a className="btn btn-primary" href={APK_URL}>
           <IconDownload />Descargar app
         </a>
       </section>
@@ -68,9 +76,9 @@ export function AppInstallBanner() {
       <div>
         <h2>App para Android</h2>
         <p>Escanee el código con la cámara del celular para descargar la app, o abra esta página desde el celular.</p>
-        <p className="small muted" style={{ wordBreak: 'break-all' }}>{url}</p>
+        <p className="small muted">Versión {version}</p>
       </div>
-      <a className="btn" href={APK_PATH} download="parksmart-arkadia.apk">
+      <a className="btn" href={APK_URL}>
         <IconDownload />Descargar APK
       </a>
     </section>
@@ -79,10 +87,10 @@ export function AppInstallBanner() {
 
 /** Acceso rápido en la grilla del inicio. */
 export function AndroidDownload() {
-  const available = useApkAvailable();
-  if (!available) return null;
+  const version = useApkRelease();
+  if (!version) return null;
   return (
-    <a href={APK_PATH} download="parksmart-arkadia.apk">
+    <a href={APK_URL}>
       <b><IconDownload />App para Android</b>
       <span>Descargue e instale la APK en su celular</span>
     </a>
